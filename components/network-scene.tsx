@@ -16,7 +16,7 @@ const N = 110
 const R = 1.55
 const HUBS = 5
 const CYCLE = 3.4
-const BASE = '#E2DAEF'
+const BASE = '#5B4F7A'
 
 function fibonacci(i: number, n: number) {
   const y = 1 - (i / (n - 1)) * 2
@@ -51,11 +51,14 @@ export default function NetworkScene({ className }: { className?: string }) {
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 50)
-    camera.position.set(0, 0, 5.4)
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9cfe8, 2.2))
-    const key = new THREE.DirectionalLight(0xffffff, 1.6)
+    camera.position.set(0, 0, 5.2)
+    scene.add(new THREE.HemisphereLight(0xf3ecff, 0x2a1b3d, 1.7))
+    const key = new THREE.DirectionalLight(0xffffff, 2.2)
     key.position.set(2.5, 3, 4)
     scene.add(key)
+    const rim = new THREE.DirectionalLight(0xe58a6e, 1.2)
+    rim.position.set(-3, -1.5, -2)
+    scene.add(rim)
 
     const group = new THREE.Group()
     scene.add(group)
@@ -83,7 +86,7 @@ export default function NetworkScene({ className }: { className?: string }) {
     })
 
     const geo = new THREE.SphereGeometry(1, 20, 14)
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.0 })
+    const mat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.1 })
     const nodes = new THREE.InstancedMesh(geo, mat, N)
     const base = new THREE.Color(BASE)
     const hubCols = HUB_COLORS.map((c) => new THREE.Color(c))
@@ -119,8 +122,45 @@ export default function NetworkScene({ className }: { className?: string }) {
     })
     lineGeo.setAttribute('position', new THREE.BufferAttribute(lp, 3))
     lineGeo.setAttribute('color', new THREE.BufferAttribute(lc, 3))
-    const lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85 }))
+    const lines = new THREE.LineSegments(
+      lineGeo,
+      new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }),
+    )
     group.add(lines)
+
+    // Soft glow halos behind every node (additive), brighter for the highlighted cluster
+    const glowGeo = new THREE.BufferGeometry()
+    const gp = new Float32Array(N * 3)
+    pos.forEach((p, i) => gp.set([p.x, p.y, p.z], i * 3))
+    const gc = new Float32Array(N * 3)
+    const gs = new Float32Array(N)
+    glowGeo.setAttribute('position', new THREE.BufferAttribute(gp, 3))
+    glowGeo.setAttribute('color', new THREE.BufferAttribute(gc, 3))
+    glowGeo.setAttribute('aSize', new THREE.BufferAttribute(gs, 1))
+    const glowMat = new THREE.ShaderMaterial({
+      uniforms: { uScale: { value: renderer.getPixelRatio() * 120 } },
+      vertexShader: `attribute vec3 color; attribute float aSize; uniform float uScale; varying vec3 vC;
+        void main() { vC = color; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * uScale / -mv.z; gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `varying vec3 vC; void main() { float d = length(gl_PointCoord - 0.5); float a = exp(-d * d * 16.0); gl_FragColor = vec4(vC * a, a); }`,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    })
+    const glow = new THREE.Points(glowGeo, glowMat)
+    glow.frustumCulled = false
+    group.add(glow)
+
+    // Drifting dust for depth
+    const dustN = 320
+    const dp = new Float32Array(dustN * 3)
+    for (let i = 0; i < dustN; i++) {
+      const v = fibonacci(Math.floor(Math.random() * 997), 997).multiplyScalar(2.1 + Math.random() * 1.6)
+      dp.set([v.x, v.y, v.z], i * 3)
+    }
+    const dustGeo = new THREE.BufferGeometry()
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dp, 3))
+    const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xb9a8dc, size: 0.018, transparent: true, opacity: 0.55, depthWrite: false }))
+    scene.add(dust)
 
     const resize = () => {
       const w = el.clientWidth
@@ -129,7 +169,7 @@ export default function NetworkScene({ className }: { className?: string }) {
       renderer.domElement.style.width = `${w}px`
       renderer.domElement.style.height = `${h}px`
       camera.aspect = w / Math.max(h, 1)
-      camera.position.z = w < 520 ? 6.3 : 5.4
+      camera.position.z = w < 520 ? 6.2 : 5.2
       camera.updateProjectionMatrix()
     }
     resize()
@@ -218,11 +258,18 @@ export default function NetworkScene({ className }: { className?: string }) {
         dummy.scale.setScalar(s)
         dummy.updateMatrix()
         nodes.setMatrixAt(i, dummy.matrix)
+        const g = (isHub ? (hubOf[i] === active ? 1.25 : 0.55) : 0.12 + mix[i] * 0.75) * pulse
+        tmp.copy(isHub ? hubCols[hubOf[i]] : base).lerp(hubCols[hubOf[i]], isHub ? 0 : mix[i])
+        gc.set([tmp.r * g, tmp.g * g, tmp.b * g], i * 3)
+        gs[i] = isHub ? 1.5 * pulse : 0.45 + mix[i] * 0.5
       }
+      glowGeo.attributes.color.needsUpdate = true
+      glowGeo.attributes.aSize.needsUpdate = true
+      dust.rotation.y = -t * 0.02
       nodes.instanceMatrix.needsUpdate = true
       if (nodes.instanceColor) nodes.instanceColor.needsUpdate = true
 
-      const faint = new THREE.Color('#E6DFF1')
+      const faint = new THREE.Color('#30264A')
       pairs.forEach(([a, b], j) => {
         const m = Math.min(mix[a], mix[b])
         tmp.copy(faint).lerp(hubCols[hubOf[a]], m)
@@ -259,6 +306,9 @@ export default function NetworkScene({ className }: { className?: string }) {
       geo.dispose()
       mat.dispose()
       lineGeo.dispose()
+      glowGeo.dispose()
+      glowMat.dispose()
+      dustGeo.dispose()
       renderer.dispose()
       renderer.domElement.remove()
     }

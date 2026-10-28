@@ -14,12 +14,16 @@ const config: Config = {
         lilac: 'hsl(var(--lilac))',
         peach: 'hsl(var(--peach))',
         sage: 'hsl(var(--sage))',
+        night: 'hsl(var(--night))',
+        dusk: 'hsl(var(--dusk))',
+        champagne: 'hsl(var(--champagne))',
       },
       fontFamily: {
         display: ['var(--font-display)'],
         sans: ['var(--font-sans)'],
       },
-      borderRadius: { '4xl': '2rem' },
+      borderRadius: { '4xl': '2rem', '5xl': '2.75rem' },
+      letterSpacing: { tightest: '-0.035em' },
       boxShadow: {
         soft: '0 1px 2px hsl(270 30% 20% / 0.04), 0 12px 32px -12px hsl(270 40% 30% / 0.14)',
         lift: '0 2px 4px hsl(270 30% 20% / 0.05), 0 24px 48px -16px hsl(270 45% 30% / 0.22)',

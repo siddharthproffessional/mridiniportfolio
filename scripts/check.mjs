@@ -23,7 +23,7 @@ check('no phone number published', !/\+?971\s?50\s?662|6621641|wa\.me/.test(html
 check('email published', html.includes('mridiniangurana@gmail.com'))
 check('no photo on the page', (await p.$$('img')).length === 0)
 const text = await p.evaluate(() => document.body.innerText)
-for (const f of ['BSc (Hons) Psychology with Human Resource Management', 'Middlesex University Dubai', 'Expected 2028', 'Resource and Talent Management', 'Management in Global Environment', 'Brain, Body & Mind', 'Psychological Science', 'Database Systems', 'Computer Networks', 'Digital Design', 'BMS Solutions', 'GTIS Cyber Security', 'Gurgaon, Haryana, India', 'debugging software applications', '3rd Best Speaker', 'BEHES 2020', 'JASHN 2024', 'basketball', 'fashion, dance and music', 'Java', 'SQL'])
+for (const f of ['BSc (Hons) Psychology with Human Resource Management', 'Middlesex University Dubai', 'Expected 2028', 'Resource and Talent Management', 'Management in Global Environment', 'Brain, Body & Mind', 'Psychological Science', 'Database Systems', 'Computer Networks', 'Digital Design', 'BMS Solutions', 'outbound cold calls', 'IT and technology services', 'GTIS Cyber Security', 'Gurgaon, Haryana, India', 'debugging software applications', '3rd Best Speaker', 'BEHES 2020', 'JASHN 2024', 'basketball', 'fashion, dance and music', 'Java', 'SQL'])
   check(`resume fact present: ${f}`, text.includes(f))
 for (const a of await p.$$eval('a[href^="#"]', (as) => [...new Set(as.map((a) => a.getAttribute('href')))])) if (a.length > 1) check(`anchor ${a} exists`, Boolean(await p.$(a)))
 const pdf = await p.request.get(base + '/resume/Mridini-Angurana-Resume.pdf')
