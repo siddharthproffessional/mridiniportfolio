@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cream: 268 40% 97%;
+  --card: 0 0% 100%;
+  --ink: 268 34% 17%;
+  --muted: 266 12% 42%;
+  --line: 266 24% 88%;
+  --plum: 266 34% 45%;
+  --lilac: 266 60% 93%;
+  --peach: 14 70% 66%;
+  --sage: 150 20% 56%;
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-sans: 'Figtree Variable', system-ui, sans-serif;
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  @apply bg-cream font-sans text-ink antialiased;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+::selection {
+  background: hsl(var(--peach) / 0.35);
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display text-ink;
+  font-variation-settings: 'SOFT' 100, 'WONK' 0;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--plum));
+  outline-offset: 3px;
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .kicker {
+    @apply inline-flex items-center gap-2 rounded-full bg-lilac px-3 py-1 text-[0.8rem] font-semibold text-plum;
+  }
+  .panel {
+    @apply rounded-4xl bg-card shadow-soft;
+  }
+  .pill {
+    @apply inline-flex items-center rounded-full border border-line bg-card px-3.5 py-1.5 text-[0.88rem] text-ink/85;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[0.95rem] font-semibold transition-all duration-300;
+  }
+  .btn-plum {
+    @apply btn bg-plum text-white shadow-soft hover:-translate-y-0.5 hover:shadow-lift;
+  }
+  .btn-soft {
+    @apply btn bg-card text-ink shadow-soft hover:-translate-y-0.5 hover:shadow-lift;
+  }
+}
